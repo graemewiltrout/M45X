@@ -24,11 +24,13 @@ Finite Difference Methods Overview:
 """
 
 def forward_finite_difference(f, x, h=1e-5, o=None, a=None):
-    if o not in Forward_Diff_Coefficients:
+    if o is not None:
+      if o not in Forward_Diff_Coefficients:
         raise ValueError(f"Order '{o}' is not supported for forward finite difference. Available orders are: {list(Forward_Diff_Coefficients.keys())}.")
-
-    if a not in Forward_Diff_Coefficients.get(o, {}):
-        raise ValueError(f"Accuracy '{a}' is not available for order '{o}' in forward finite difference. Available accuracies for order {o} are: {list(Forward_Diff_Coefficients[o].keys())}.")
+    
+    if a is not None:
+        if a not in Forward_Diff_Coefficients.get(o, {}):
+            raise ValueError(f"Accuracy '{a}' is not available for order '{o}' in forward finite difference. Available accuracies for order {o} are: {list(Forward_Diff_Coefficients[o].keys())}.")
 
     if o is not None and a is not None:
         # Use coefficients from the Forward_Diff_Coefficients table
@@ -39,11 +41,13 @@ def forward_finite_difference(f, x, h=1e-5, o=None, a=None):
         return (f(x + h) - f(x)) / h
 
 def centered_finite_difference(f, x, h=1e-5, o=None, a=None):
-    if o not in Centered_Coefficients:
-        raise ValueError(f"Order '{o}' is not supported for centered finite difference. Available orders are: {list(Centered_Coefficients.keys())}.")
-
-    if a not in Centered_Coefficients.get(o, {}):
-        raise ValueError(f"Accuracy '{a}' is not available for order '{o}' in centered finite difference. Available accuracies for order {o} are: {list(Centered_Coefficients[o].keys())}.")
+    if o is not None:
+      if o not in Forward_Diff_Coefficients:
+        raise ValueError(f"Order '{o}' is not supported for forward finite difference. Available orders are: {list(Forward_Diff_Coefficients.keys())}.")
+    
+    if a is not None:
+        if a not in Forward_Diff_Coefficients.get(o, {}):
+            raise ValueError(f"Accuracy '{a}' is not available for order '{o}' in forward finite difference. Available accuracies for order {o} are: {list(Forward_Diff_Coefficients[o].keys())}.")
 
     if o is not None and a is not None:
         # Use coefficients from the Centered_Coefficients table
@@ -54,11 +58,13 @@ def centered_finite_difference(f, x, h=1e-5, o=None, a=None):
         return (f(x + h) - f(x - h)) / (2*h)
 
 def backward_finite_difference(f, x, h=1e-5, o=None, a=None):
-    if o not in Backward_Diff_Coefficients:
-        raise ValueError(f"Order '{o}' is not supported for backward finite difference. Available orders are: {list(Backward_Diff_Coefficients.keys())}.")
-
-    if a not in Backward_Diff_Coefficients.get(o, {}):
-        raise ValueError(f"Accuracy '{a}' is not available for order '{o}' in backward finite difference. Available accuracies for order {o} are: {list(Backward_Diff_Coefficients[o].keys())}.")
+    if o is not None:
+      if o not in Forward_Diff_Coefficients:
+        raise ValueError(f"Order '{o}' is not supported for forward finite difference. Available orders are: {list(Forward_Diff_Coefficients.keys())}.")
+    
+    if a is not None:
+        if a not in Forward_Diff_Coefficients.get(o, {}):
+            raise ValueError(f"Accuracy '{a}' is not available for order '{o}' in forward finite difference. Available accuracies for order {o} are: {list(Forward_Diff_Coefficients[o].keys())}.")
 
     if o is not None and a is not None:
         # Use coefficients from the Backward_Diff_Coefficients table

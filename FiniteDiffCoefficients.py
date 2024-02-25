@@ -4,6 +4,8 @@ Numerical Methods Package: Finite Difference Coefficients
 @advisor: T. Fogarty
 """
 
+#Coefficients come from https://en.wikipedia.org/wiki/Finite_difference_coefficient
+    
 Forward_Diff_Coefficients = {
     1: {
         1: [-1, 1, 0, 0, 0, 0, 0],

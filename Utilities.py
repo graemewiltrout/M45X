@@ -6,6 +6,7 @@ Numerical Methods Package: Utilities
 
 import numpy as np
 
+
 def data(func, l, r, h):
     """
     Generates x values and their corresponding f(x) values within a given domain.

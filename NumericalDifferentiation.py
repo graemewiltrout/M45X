@@ -78,6 +78,7 @@ def finite_difference(data, i, o, a):
     """
     Approximates the derivative at a specific index within a discrete dataset using
     forward, backward, or centered finite differences based on the position of the index.
+    This version includes the backward finite difference for the end of the dataset.
 
     Parameters:
     - data: list of tuples, the dataset as (x, y) pairs.
@@ -92,18 +93,15 @@ def finite_difference(data, i, o, a):
     if i < 0 or i >= len(data):
         raise ValueError("Index out of bounds.")
 
-    # Calculate step size h from neighboring points
-    # For indices at the boundaries, adjust the approach to use the closest available interval
-    if i > 0:
-        h = data[i][0] - data[i - 1][0]
-    elif i < len(data) - 1:
-        h = data[i + 1][0] - data[i][0]
+    # Calculate step size h from neighboring points assuming uniform spacing
+    h = data[1][0] - data[0][0]
 
     # Determine the method based on index position
     cfd_range = len(Centered_Coefficients[o][a]) // 2
     method = ''
     coefficients = []
 
+    # Choose the method based on the position of the index i
     if i < cfd_range:
         method = 'FFD'
         coefficients = Forward_Diff_Coefficients[o][a]
@@ -120,12 +118,18 @@ def finite_difference(data, i, o, a):
         for j, coeff in enumerate(coefficients):
             index = i + j - cfd_range
             derivative += coeff * data[index][1]
-    else:
-        start_index = i if method == 'FFD' else i - len(coefficients) + 1
+    elif method == 'BFD':
+        # When using BFD, start from the point of interest and move backward
         for j, coeff in enumerate(coefficients):
-            derivative += coeff * data[start_index + j][1]
+            index = i - (len(coefficients) - 1 - j)
+            derivative += coeff * data[index][1]
+    else:  # FFD
+        # When using FFD, start from the point of interest and move forward
+        for j, coeff in enumerate(coefficients):
+            derivative += coeff * data[i + j][1]
 
     return derivative / h**o
+
 
 
 

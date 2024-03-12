@@ -28,6 +28,9 @@ from .ODE import (
     eulers_method,
     runge_kutta_2_midpoint,
     runge_kutta_2_heun,
+    runge_kutta_4,
+    adams_bashforth_2,
+    adams_bashforth_4,
     taylors_method
     )
 from .BasicMath import(
@@ -60,6 +63,9 @@ __all__ = [
     "eulers_method",
     "runge_kutta_2_midpoint",
     "runge_kutta_2_heun",
+    "runge_kutta_4",
+    "adams_bashforth_2",
+    "adams_bashforth_4",
     "taylors_method",
     "factorial",
     "pi",

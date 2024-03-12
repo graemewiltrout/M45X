@@ -1,3 +1,8 @@
+"""
+Numerical Methods Package: Initialization
+@author: Graeme Wiltrout
+@advisor: T. Fogarty
+"""
 from .NumericalDifferentiation import (
     forward_finite_difference,
     centered_finite_difference,

@@ -31,7 +31,7 @@ from .ODE import (
     runge_kutta_4,
     adams_bashforth_2,
     adams_bashforth_4,
-    taylors_method
+    taylors_method_O3
     )
 from .BasicMath import(
     factorial
@@ -66,7 +66,7 @@ __all__ = [
     "runge_kutta_4",
     "adams_bashforth_2",
     "adams_bashforth_4",
-    "taylors_method",
+    "taylors_method_O3",
     "factorial",
     "pi",
     "e",

@@ -20,7 +20,7 @@ def forward_finite_difference(f, x, h, o, a):
     Returns:
     - float, the approximated derivative.
     """
-    # Assuming Forward_Diff_Coefficients is correctly defined as per your provided coefficients
+
     if o not in Forward_Diff_Coefficients or a not in Forward_Diff_Coefficients[o]:
         raise ValueError("Invalid order or accuracy for forward finite difference.")
         
@@ -42,7 +42,7 @@ def centered_finite_difference(f, x, h, o, a):
     Returns:
     - float, the approximated derivative.
     """
-    # Assuming Centered_Coefficients is correctly defined as per your provided coefficients
+
     if o not in Centered_Coefficients or a not in Centered_Coefficients[o]:
         raise ValueError("Invalid order or accuracy for centered finite difference.")
         

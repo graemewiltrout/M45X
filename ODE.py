@@ -6,6 +6,8 @@ Numerical Methods Package: Ordinary Differential Equations
 
 import numpy as np
 from scipy.optimize import fsolve
+from scipy.integrate import solve_ivp
+from MatOps import gaussian_elimination
 
 def eulers_method(f, h, l, r, y0, t0=0):
     """
@@ -204,8 +206,6 @@ def adams_bashforth_4(f, h, l, r, y0):
         
     return ts, ys
 
-
-
 def taylors_method_O3(f, df, ddf, h, l, r, y0):
     ts = [l]
     ys = [y0]
@@ -280,3 +280,99 @@ def abm4(f, h, l, r, y0):
         ys.append(y_corr)
     
     return ts, ys
+
+def solve_bvp_centered_finite_diff(p, q, r, a, b, A, B, N):
+    """
+    Solves a second-order boundary value problem using centered finite differences
+    and Gaussian elimination for solving the resulting linear system.
+    
+    Parameters:
+    p, q, r: Functions defining the BVP y'' + p(x)*y' + q(x)*y = r(x).
+    a, b: The spatial domain [a, b].
+    A, B: Boundary values at a and b, respectively.
+    N: Number of intervals (N+1 points including the boundaries).
+    
+    Returns:
+    x: The spatial points.
+    y: The solution at the spatial points.
+    """
+    h = (b - a) / N  # Step size
+    x = [a + i*h for i in range(N+1)]  # Spatial points
+    
+    # Initialize the augmented matrix for the linear system
+    aug_matrix = [[0 for _ in range(N+2)] for _ in range(N+1)]
+    
+    # Apply boundary conditions
+    aug_matrix[0][0] = 1
+    aug_matrix[0][-1] = A
+    aug_matrix[N][N] = 1
+    aug_matrix[N][-1] = B
+    
+    # Fill the augmented matrix for the interior points
+    for i in range(1, N):
+        xi = x[i]
+        aug_matrix[i][i-1] = 1/h**2 - p(xi)/(2*h)  # Coefficient for y_{i-1}
+        aug_matrix[i][i] = -2/h**2 + q(xi)         # Coefficient for y_i
+        aug_matrix[i][i+1] = 1/h**2 + p(xi)/(2*h)  # Coefficient for y_{i+1}
+        aug_matrix[i][-1] = r(xi)                  # r(x_i)
+    
+    # Solve the linear system using Gaussian elimination
+    aug_matrix_np = np.array(aug_matrix)
+    solution = gaussian_elimination(N+1, aug_matrix_np)
+    
+    return x, solution
+
+def non_linear_shooting_method(f, a, b, A, B, N, tol=1e-5, max_iter=100):
+    """
+    Solve a second-order BVP using the non-linear shooting method.
+
+    Parameters:
+    - f: The function defining the differential equation y'' = f(x, y, y').
+    - a, b: The interval endpoints.
+    - A, B: The boundary values at a and b, respectively.
+    - N: The number of intervals (N+1 points including endpoints).
+    - tol: Tolerance for the root-finding procedure.
+    - max_iter: Maximum number of iterations for the root-finding procedure.
+
+    Returns:
+    - x: Array of x values.
+    - y: Array of y values.
+    """
+    # Define the system of first-order ODEs for use in solve_ivp
+    def system(x, Y):
+        y, dy = Y
+        return [dy, f(x, y, dy)]
+
+    def shoot(guess):
+        """
+        Solve the IVP for a given guess of y'(a) and return y(b).
+        """
+        sol = solve_ivp(system, [a, b], [A, guess], t_eval=np.linspace(a, b, N+1))
+        return sol.y[0, -1]  # Return y(b)
+
+    # Initial guesses for y'(a)
+    guess_1 = 0.0
+    guess_2 = 1.0
+
+    # Use the secant method to adjust the guesses
+    for _ in range(max_iter):
+        f1 = shoot(guess_1) - B
+        f2 = shoot(guess_2) - B
+        
+        if abs(f2 - f1) < tol:
+            break
+
+        # Secant method update
+        guess_new = guess_2 - f2 * (guess_2 - guess_1) / (f2 - f1)
+        
+        if abs(guess_new - guess_2) < tol:
+            break
+        
+        guess_1, guess_2 = guess_2, guess_new
+
+    # Once the correct guess is found, solve the BVP with the final guess
+    final_guess = guess_2
+    x = np.linspace(a, b, N+1)
+    sol = solve_ivp(system, [a, b], [A, final_guess], t_eval=x)
+
+    return x, sol.y[0]

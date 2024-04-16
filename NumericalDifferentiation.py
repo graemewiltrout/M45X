@@ -74,63 +74,31 @@ def backward_finite_difference(f, x, h, o, a):
     derivative_approximation = sum(coeff * f(x - i * h) for i, coeff in enumerate(coefficients))
     return derivative_approximation / h**o
 
-def finite_difference(data, i, o, a):
-    """
-    Approximates the derivative at a specific index within a discrete dataset using
-    forward, backward, or centered finite differences based on the position of the index.
-    This version includes the backward finite difference for the end of the dataset.
-
-    Parameters:
-    - data: list of tuples, the dataset as (x, y) pairs.
-    - i: int, the index of the data point at which to approximate the derivative.
-    - o: int, the order of the derivative.
-    - a: int, the accuracy of the approximation.
-
-    Returns:
-    - float, the approximated derivative at the specified index.
-    """
-    # Ensure index is within the dataset bounds
-    if i < 0 or i >= len(data):
-        raise ValueError("Index out of bounds.")
-
-    # Calculate step size h from neighboring points assuming uniform spacing
-    h = data[1][0] - data[0][0]
-
-    # Determine the method based on index position
-    cfd_range = len(Centered_Coefficients[o][a]) // 2
-    method = ''
-    coefficients = []
-
-    # Choose the method based on the position of the index i
-    if i < cfd_range:
-        method = 'FFD'
-        coefficients = Forward_Diff_Coefficients[o][a]
-    elif i > len(data) - cfd_range - 1:
-        method = 'BFD'
-        coefficients = Backward_Diff_Coefficients[o][a]
-    else:
-        method = 'CFD'
-        coefficients = Centered_Coefficients[o][a]
-
-    # Calculation
+def finite_difference(data, i, o, a, hold_a='n'):
+    n = len(data)
+    h = data[1][0] - data[0][0]  # Assume uniform spacing
     derivative = 0
-    if method == 'CFD':
-        for j, coeff in enumerate(coefficients):
-            index = i + j - cfd_range
-            derivative += coeff * data[index][1]
-    elif method == 'BFD':
-        # When using BFD, start from the point of interest and move backward
-        for j, coeff in enumerate(coefficients):
-            index = i - (len(coefficients) - 1 - j)
-            derivative += coeff * data[index][1]
-    else:  # FFD
-        # When using FFD, start from the point of interest and move forward
-        for j, coeff in enumerate(coefficients):
-            derivative += coeff * data[i + j][1]
-
+    
+    if i < a // 2:  # Use forward differences near the beginning
+        if hold_a == 'n' and (a + 2) in Forward_Diff_Coefficients[o]:
+            # Check if a higher accuracy is available, if not, stick to the current level
+            a += 2
+        coeffs = Forward_Diff_Coefficients[o][a]
+        for j in range(len(coeffs)):
+            derivative += coeffs[j] * data[i + j][1]
+    elif i > n - 1 - a // 2:  # Use backward differences near the end
+        if hold_a == 'n' and (a + 2) in Backward_Diff_Coefficients[o]:
+            # Check if a higher accuracy is available, if not, stick to the current level
+            a += 2
+        coeffs = Backward_Diff_Coefficients[o][a]
+        for j in range(len(coeffs)):
+            derivative += coeffs[j] * data[i - j][1]
+    else:  # Use centered differences in the middle
+        coeffs = Centered_Coefficients[o][a]
+        for j in range(len(coeffs)):
+            derivative += coeffs[j] * data[i + j - a // 2][1]
+    
     return derivative / h**o
-
-
 
 
 def richardson_extrapolation(f, x, h=0.001, o=1, a=2):

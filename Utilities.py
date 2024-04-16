@@ -20,30 +20,12 @@ from ODE import forward_euler
 from ODE import backwards_euler
 
 
-def data(func, l, r, h):
-    """
-    Generates x values and their corresponding f(x) values within a given domain.
-
-    Parameters
-    ----------
-    func : function
-        The function for which f(x) values are to be computed.
-    l : float
-        The left boundary of the domain.
-    r : float
-        The right boundary of the domain.
-    h : float
-        The step size for generating x values.
-
-    Returns
-    -------
-    dataset : list of tuples
-        A list of (x, f(x)) tuples.
-    """
-    x_values = np.arange(l, r + h, h)
-    dataset = [(x, func(x)) for x in x_values]
-    
-    return dataset
+def data(f, l, r, h):
+    num_steps = int((r - l) / h)
+    points = [(l + i * h, f(l + i * h)) for i in range(num_steps + 1)]
+    if l + num_steps * h < r:  # Explicitly include the last point
+        points.append((r, f(r)))
+    return points
 
 method_selectors = {
     "TMO3": taylors_method_O3,

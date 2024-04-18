@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 from NumericalDifferentiation import finite_difference
 from NumericalIntegration import trapezoid, simpson
 from ODE import runge_kutta_2_heun, runge_kutta_2_midpoint, runge_kutta_4, taylors_method_O3, eulers_method
-from Utilities import data
+from Utilities import data, plot_ode_convergence
 from fractions import Fraction
 
 def f(x):
@@ -22,6 +22,7 @@ def df(x):
 def d2f(x):
     return -50 * np.sin(5*x)
 
+odes = ["TMO3", "RK2M", "RK2H", "RK4"]
 
 odef = lambda t, y: -2 * y + np.exp(-t)
 odedf = lambda t, y: np.exp(-t) - 2 * (-2 * y + np.exp(-t))
@@ -47,9 +48,12 @@ def plot_finite_difference(exact_f, df, ddf, l, r, h, ftitle, htitle):
     data_points = data(exact_f, l, r, h)
     x_vals = [point[0] for point in data_points]
     y_vals = [point[1] for point in data_points]
+    
+    
+    a = 2
 
-    df_vals = [finite_difference(data_points, i, 1, 4) for i in range(len(data_points))]
-    ddf_vals = [finite_difference(data_points, i, 2, 4) for i in range(len(data_points))]
+    df_vals = [finite_difference(data_points, i, 1, a) for i in range(len(data_points))]
+    ddf_vals = [finite_difference(data_points, i, 2, a) for i in range(len(data_points))]
 
     x_continuous = np.linspace(l, r, num=int((r - l) / (h / 10)) + 1)
     y_continuous = exact_f(x_continuous)
@@ -62,12 +66,12 @@ def plot_finite_difference(exact_f, df, ddf, l, r, h, ftitle, htitle):
 
     # Define a function to create each plot
     def create_plot(x, y, y_cont=None, label1="Finite Difference Approximation", label2="Exact function", title=""):
-        plt.figure(figsize=(12, 6))
+        plt.figure(figsize=(12, 8))
         plt.scatter(x, y, color='red', label=label1)
         if y_cont is not None:
             plt.plot(x_continuous, y_cont, 'b-', label=label2)
         plt.xticks(x_ticks, x_labels)
-        plt.title(f'{title}\n h = ${htitle}$')
+        plt.title(f'{title}\n h = ${htitle}$ \n a = {a}')
         plt.xlabel('x')
         plt.ylabel('f(x)')
         plt.grid(True)
@@ -77,11 +81,11 @@ def plot_finite_difference(exact_f, df, ddf, l, r, h, ftitle, htitle):
     # Generate each plot
     create_plot(x_vals, y_vals, title='Totally Completely Random Data Points')
     create_plot(x_vals, y_vals, y_continuous, title=f'{ftitle} and Data Points')
-    create_plot(x_vals, df_vals, df_continuous, label2="Exact df/dx", title=f'Comparison of First Derivative for {ftitle}')
-    create_plot(x_vals, ddf_vals, ddf_continuous, label2="Exact ddf/dx", title=f'Comparison of Second Derivative for {ftitle}')
+    create_plot(x_vals, df_vals, df_continuous, label2="Exact df/dx", title=f'Comparison of First Derivative for {ftitle}\n' + r'Exact: $10\cos(5x) + 0.5$')
+    create_plot(x_vals, ddf_vals, ddf_continuous, label2="Exact ddf/dx", title=f'Comparison of Second Derivative for {ftitle}\n' + r'Exact: $-50\sin(5x)$')
     
     
-def plot_integration(f, l, r, n, ftitle):
+def plot_integration(f, l, r, n, ftitle, fexact):
     # Generate points for plotting the function
     x_plot = np.linspace(l, r, 1000)
     y_plot = f(x_plot)
@@ -103,21 +107,21 @@ def plot_integration(f, l, r, n, ftitle):
     simp_integral = simpson(f, l, r, n)
 
     # Plotting Trapezoid Method
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 8))
     plt.plot(x_plot, y_plot, 'r-', label='Function $f(x)$')
     plt.plot(x_data, y_data, 'bo', label='Data points')
     for i in range(n):
         plt.fill([x_data[i], x_data[i], x_data[i+1], x_data[i+1]],
                  [0, y_data[i], y_data[i+1], 0], 'b', alpha=0.3, edgecolor='b')
     plt.xticks(x_ticks, x_labels)
-    plt.title(f'Numerical Integration using Trapezoid Method for {ftitle}\n Integral Approximation: {trap_integral:.8f}\n {n} intervals')
+    plt.title(f'Numerical Integration using Trapezoid Method for {ftitle}\n Integral Approximation: {trap_integral:.8f}\n Exact Integral: {fexact:.8f}\n {n} intervals')
     plt.xlabel('x')
     plt.ylabel('f(x)')
     plt.legend()
     plt.show()
 
     # Plotting Simpson's Method
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 8))
     plt.plot(x_plot, y_plot, 'r-', label='Function $f(x)$')
     plt.plot(x_data, y_data, 'bo', label='Data points')
     for i in range(n//2):
@@ -127,7 +131,7 @@ def plot_integration(f, l, r, n, ftitle):
         y_fit = np.polyval(np.polyfit(xi, yi, 2), x_fit)
         plt.fill_between(x_fit, 0, y_fit, color='g', alpha=0.3)
     plt.xticks(x_ticks, x_labels)
-    plt.title(f'Numerical Integration using Simpson\'s Method for {ftitle}\n Integral Approximation: {simp_integral:.8f}\n{n} interval')
+    plt.title(f'Numerical Integration using Simpson\'s Method for {ftitle}\n Integral Approximation: {simp_integral:.8f}\n  Exact Integral: {fexact:.8f}\n{n} interval')
     plt.xlabel('x')
     plt.ylabel('f(x)')
     plt.legend()
@@ -136,7 +140,7 @@ def plot_integration(f, l, r, n, ftitle):
     # Return the integral values
     return {'Trapezoid Method': trap_integral, 'Simpson Method': simp_integral}
 
-def plot_ode(f, df, ddf, y0, t0, tF, h, sol, ftitle):
+def plot_ode(f, df, ddf, y0, t0, tF, h, sol, ftitle, fexact):
     # Generating points for the exact solution using the sol function
     t_exact = np.linspace(t0, tF, 1000)
     y_exact = sol(t_exact)
@@ -149,7 +153,7 @@ def plot_ode(f, df, ddf, y0, t0, tF, h, sol, ftitle):
     t_taylor, y_taylor = taylors_method_O3(f, df, ddf, h, t0, tF, y0)
 
     # Plotting the results
-    plt.figure(figsize=(12, 6))
+    plt.figure(figsize=(12, 8))
     plt.plot(t_exact, y_exact, 'k-', label='Exact Solution')
     plt.plot(t_euler, y_euler, 'o--', label="Euler's Method", markersize=4)
     plt.plot(t_heun, y_heun, 's--', label="Runge-Kutta 2nd Order (Heun)", markersize=4)
@@ -157,7 +161,32 @@ def plot_ode(f, df, ddf, y0, t0, tF, h, sol, ftitle):
     plt.plot(t_rk4, y_rk4, '^--', label='Runge-Kutta 4th Order', markersize=4)
     plt.plot(t_taylor, y_taylor, 'x--', label="Taylor's Method 3rd Order", markersize=4)
 
-    plt.title(f'Comparison of Numerical Methods for Solving ODEs: {ftitle}\n h = ${h}$')
+    plt.title(f'Comparison of Numerical Methods for Solving ODEs:\n' f'$\\frac{{dy}}{{dt}} = {ftitle}$, ' f'$y(t) = {fexact}$ \n' f'$h = {h}$')
+    plt.xlabel('Time, t')
+    plt.ylabel('Solution, y(t)')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+    
+def plot_ode2(f, df, ddf, y0, t0, tF, h, sol, ftitle, fexact):
+    # Generating points for the exact solution using the sol function
+    t_exact = np.linspace(t0, tF, 1000)
+    y_exact = sol(t_exact)
+
+    # Solving the ODE using various methods
+    t_euler, y_euler = eulers_method(f, h, t0, tF, y0)
+    t_heun, y_heun = runge_kutta_2_heun(f, h, t0, tF, y0)
+    t_midpoint, y_midpoint = runge_kutta_2_midpoint(f, h, t0, tF, y0)
+    t_rk4, y_rk4 = runge_kutta_4(f, h, t0, tF, y0)
+    t_taylor, y_taylor = taylors_method_O3(f, df, ddf, h, t0, tF, y0)
+
+    # Plotting the results
+    plt.figure(figsize=(12, 8))
+    plt.plot(t_exact, y_exact, 'k-', label='Exact Solution')
+    plt.plot(t_euler, y_euler, 'o--', label="Euler's Method", markersize=4)
+    plt.plot(t_taylor, y_taylor, 'x--', label="Taylor's Method 3rd Order", markersize=4)
+
+    plt.title(f'Comparison of Numerical Methods for Solving ODEs:\n' f'$\\frac{{dy}}{{dt}} = {ftitle}$, ' f'$y(t) = {fexact}$ \n' f'$h = {h}$')
     plt.xlabel('Time, t')
     plt.ylabel('Solution, y(t)')
     plt.legend()
@@ -168,8 +197,11 @@ def plot_ode(f, df, ddf, y0, t0, tF, h, sol, ftitle):
 plt.close('all')    
 plot_finite_difference(f, df, d2f, 0, 2*np.pi, np.pi/16, '2sin(5x) + 0.5x', '\\frac{\\pi}{16}')
 plot_finite_difference(f, df, d2f, 0, 2*np.pi, np.pi/64, '2sin(5x) + 0.5x', '\\frac{\\pi}{64}')
-plot_integration(f, 0, (2 * np.pi), 16, '2sin(5x) + 0.5x')
-plot_integration(f, 0, (2 * np.pi), 32, '2sin(5x) + 0.5x')
-plot_integration(f, 0, (2 * np.pi), 128, '2sin(5x) + 0.5x')
-plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.5, odesol, r"$y' = -2y + e^{-t}$")
-plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.01, odesol, r"$y' = -2y + e^{-t}$")
+plot_integration(f, 0, (2 * np.pi), 16, '2sin(5x) + 0.5x', 9.86960440)
+plot_integration(f, 0, (2 * np.pi), 32, '2sin(5x) + 0.5x', 9.86960440)
+plot_integration(f, 0, (2 * np.pi), 128, '2sin(5x) + 0.5x', 9.86960440)
+plot_ode2(odef, odedf, odeddf, 1, 0, 5, 0.5, odesol, '-2y + e^{-t}', 'e^{-t}')
+plot_ode2(odef, odedf, odeddf, 1, 0, 5, 0.01, odesol, '-2y + e^{-t}', 'e^{-t}')
+plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.5, odesol, '-2y + e^{-t}', 'e^{-t}')
+plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.01, odesol, '-2y + e^{-t}', 'e^{-t}')
+plot_ode_convergence(odes, odef, (0,5), 1, '-2y + e^{-t}', odedf, odeddf)

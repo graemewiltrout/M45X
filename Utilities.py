@@ -46,10 +46,10 @@ def ode_convergence_analysis(method, f, interval, y0, df=None, ddf=None):
 
     Parameters:
     - method: A function that solves an ODE using a specific numerical method.
-              It must accept the parameters (f, h, l, r, y0).
+              It must accept parameters appropriate to the method.
     - f: The function representing the ODE dy/dt = f(t, y).
-    - df: The first derivative of f with respect to t.
-    - ddf: The second derivative of f with respect to t.
+    - df: The first derivative of f, required by some methods.
+    - ddf: The second derivative of f, required by some methods.
     - interval: A tuple (start, end) defining the interval over which to solve the ODE.
     - y0: The initial condition y(t0).
 
@@ -62,9 +62,11 @@ def ode_convergence_analysis(method, f, interval, y0, df=None, ddf=None):
     errors = []
 
     for h in hs:
-        # Solve the ODE with the specified method
-        ts, ys = method(f, h, interval[0], interval[1], y0)
-        
+        if method.__name__ == "taylors_method_O3":
+            ts, ys = method(f, df, ddf, h, interval[0], interval[1], y0)
+        else:
+            ts, ys = method(f, h, interval[0], interval[1], y0)
+
         # Use solve_ivp with a fine mesh for a reference solution
         sol = solve_ivp(f, interval, [y0], t_eval=np.linspace(interval[0], interval[1], 1000))
         
@@ -89,18 +91,16 @@ def plot_ode_convergence(methods_list, f, interval, y0, title, df=None, ddf=None
         if not method:
             print(f"Method {method_abbr} is not recognized.")
             continue
-        
-        # Check if the current method is TMO3 and if df and ddf are provided
+
         if method_abbr == "TMO3" and (df is None or ddf is None):
             print("df and ddf must be provided for TMO3.")
-            continue  # Skip this iteration if df or ddf are not provided for TMO3
-        
-        if method_abbr in ["FE", "BE"]: 
-            wrapped_method = lambda f, h, l, r, y0: method(f, l, r, h, y0)  
-            (hs, errors), convergence_rate = ode_convergence_analysis(wrapped_method, f, interval, y0, df, ddf)
-        else:
+            continue
+
+        if method_abbr in ["TMO3"]:
             (hs, errors), convergence_rate = ode_convergence_analysis(method, f, interval, y0, df, ddf)
-        
+        else:
+            (hs, errors), convergence_rate = ode_convergence_analysis(method, f, interval, y0)
+
         plt.loglog(hs, errors, label=f"{method_abbr} - {convergence_rate}")
     
     plt.title(f"Convergence Analysis for {title}")
@@ -124,7 +124,6 @@ def plot_odesys_convergence(methods_list, f1, f2, interval, y1_0, y2_0, title):
     for method_abbr in methods_list:
         errors = []
         for h in hs:
-            # Numerical solution using your method
             ts, y1s, y2s = method_selectors[method_abbr](f1, f2, interval[0], interval[1], h, y1_0, y2_0)
             
             # Reference solution using solve_ivp

@@ -82,14 +82,14 @@ def finite_difference(data, i, o, a, hold_a='n'):
     if i < a // 2:  # Use forward differences near the beginning
         if hold_a == 'n' and (a + 2) in Forward_Diff_Coefficients[o]:
             # Check if a higher accuracy is available, if not, stick to the current level
-            a += 2
+            a
         coeffs = Forward_Diff_Coefficients[o][a]
         for j in range(len(coeffs)):
             derivative += coeffs[j] * data[i + j][1]
     elif i > n - 1 - a // 2:  # Use backward differences near the end
         if hold_a == 'n' and (a + 2) in Backward_Diff_Coefficients[o]:
             # Check if a higher accuracy is available, if not, stick to the current level
-            a += 2
+            a
         coeffs = Backward_Diff_Coefficients[o][a]
         for j in range(len(coeffs)):
             derivative += coeffs[j] * data[i - j][1]

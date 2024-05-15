@@ -22,12 +22,22 @@ def df(x):
 def d2f(x):
     return -50 * np.sin(5*x)
 
-odes = ["TMO3", "RK2M", "RK2H", "RK4"]
+odes = ["TMO3", "RK2M", "RK2H", "RK4", "E"]
 
-odef = lambda t, y: -2 * y + np.exp(-t)
-odedf = lambda t, y: np.exp(-t) - 2 * (-2 * y + np.exp(-t))
-odeddf = lambda t, y: -np.exp(-t) - 2 * (np.exp(-t) - 2 * (-2 * y + np.exp(-t)))
-odesol = lambda t: np.exp(-t)
+def odef(t, y):
+    return -2 * y + np.exp(-t)
+
+def odedf(t, y):
+    return 4 * y - 3 * np.exp(-t)
+
+def odeddf(t, y):
+    return -8 * y + 7 * np.exp(-t)
+
+def odedddf(t, y):
+    return 16 * y - 15 * np.exp(-t)
+
+def odesol(t):
+    return np.exp(-t)
 
 def simplify_pi_label(x, base_pi=4):
     # Simplify the fraction and express as a fraction of π
@@ -195,6 +205,7 @@ def plot_ode2(f, df, ddf, y0, t0, tF, h, sol, ftitle, fexact):
     
     
 plt.close('all')    
+"""
 plot_finite_difference(f, df, d2f, 0, 2*np.pi, np.pi/16, '2sin(5x) + 0.5x', '\\frac{\\pi}{16}')
 plot_finite_difference(f, df, d2f, 0, 2*np.pi, np.pi/64, '2sin(5x) + 0.5x', '\\frac{\\pi}{64}')
 plot_integration(f, 0, (2 * np.pi), 16, '2sin(5x) + 0.5x', 9.86960440)
@@ -204,4 +215,5 @@ plot_ode2(odef, odedf, odeddf, 1, 0, 5, 0.5, odesol, '-2y + e^{-t}', 'e^{-t}')
 plot_ode2(odef, odedf, odeddf, 1, 0, 5, 0.01, odesol, '-2y + e^{-t}', 'e^{-t}')
 plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.5, odesol, '-2y + e^{-t}', 'e^{-t}')
 plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.01, odesol, '-2y + e^{-t}', 'e^{-t}')
-plot_ode_convergence(odes, odef, (0,5), 1, '-2y + e^{-t}', odedf, odeddf)
+"""
+plot_ode_convergence(odes, odef, (0,5), 1, '-2y + e^{-t}', odesol, odedf, odeddf)

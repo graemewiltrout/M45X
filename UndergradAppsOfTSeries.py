@@ -205,7 +205,6 @@ def plot_ode2(f, df, ddf, y0, t0, tF, h, sol, ftitle, fexact):
     
     
 plt.close('all')    
-"""
 plot_finite_difference(f, df, d2f, 0, 2*np.pi, np.pi/16, '2sin(5x) + 0.5x', '\\frac{\\pi}{16}')
 plot_finite_difference(f, df, d2f, 0, 2*np.pi, np.pi/64, '2sin(5x) + 0.5x', '\\frac{\\pi}{64}')
 plot_integration(f, 0, (2 * np.pi), 16, '2sin(5x) + 0.5x', 9.86960440)
@@ -215,5 +214,4 @@ plot_ode2(odef, odedf, odeddf, 1, 0, 5, 0.5, odesol, '-2y + e^{-t}', 'e^{-t}')
 plot_ode2(odef, odedf, odeddf, 1, 0, 5, 0.01, odesol, '-2y + e^{-t}', 'e^{-t}')
 plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.5, odesol, '-2y + e^{-t}', 'e^{-t}')
 plot_ode(odef, odedf, odeddf, 1, 0, 5, 0.01, odesol, '-2y + e^{-t}', 'e^{-t}')
-"""
 plot_ode_convergence(odes, odef, (0,5), 1, '-2y + e^{-t}', odesol, odedf, odeddf)

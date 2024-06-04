@@ -3,13 +3,20 @@ Numerical Methods Package: Initialization
 @author: Graeme Wiltrout
 @advisor: T. Fogarty
 """
+
+
+"""
+Numerical Methods Package: Initialization
+"""
+
+
 from .NumericalDifferentiation import (
     forward_finite_difference,
     centered_finite_difference,
     backward_finite_difference,
     finite_difference,
     richardson_extrapolation
-    )
+)
 from .NumericalIntegration import (
     left_endpoint,
     midpoint,
@@ -18,12 +25,12 @@ from .NumericalIntegration import (
     simpson,
     gaussian_quadrature,
     romberg
-    )
+)
 from .NumericalRootFinding import (
     bisection,
     unified_newtons_method,
     secant_method
-    )
+)
 from .ODE import (
     eulers_method,
     runge_kutta_2_midpoint,
@@ -32,18 +39,36 @@ from .ODE import (
     adams_bashforth_2,
     adams_bashforth_4,
     taylors_method_O3
-    )
-from .BasicMath import(
+)
+from .BasicMath import (
     factorial
 )
-from .SpecialNumbers import(
+from .SpecialNumbers import (
     pi,
     e
 )
-
-from .Utilities import(
+from .Utilities import (
     data    
 )
+from .Complex import (
+    Complex
+)
+
+from .LinearAlgebra import (
+    gaussian_elimination,
+    gaussian_elimination_pp,
+    gaussian_elimination_spp,
+    is_symmetric,
+    is_positive_definite,
+    cholesky_decomposition,
+    cholesky_solve,
+    lu_decomposition,
+    forward_substitution,
+    backward_substitution,
+    solve_system,
+    power_method
+)
+
 __all__ = [
     "forward_finite_difference",
     "centered_finite_difference",
@@ -70,5 +95,18 @@ __all__ = [
     "factorial",
     "pi",
     "e",
-    "data"
+    "data",
+    "Complex",
+    "gaussian_elimination",
+    "gaussian_elimination_pp",
+    "gaussian_elimination_spp",
+    "is_symmetric",
+    "is_positive_definite",
+    "cholesky_decomposition",
+    "cholesky_solve",
+    "lu_decomposition",
+    "forward_substitution",
+    "backward_substitution",
+    "solve_system",
+    "power_method"
 ]

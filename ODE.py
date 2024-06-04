@@ -7,7 +7,7 @@ Numerical Methods Package: Ordinary Differential Equations
 import numpy as np
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
-from MatOps import gaussian_elimination
+from LinearAlgebra import gaussian_elimination
 
 def eulers_method(f, h, l, r, y0, t0=0):
     """

@@ -7,6 +7,8 @@ Numerical Methods Package: Utilities
 import numpy as np
 import matplotlib.pyplot as plt
 import concurrent.futures
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.animation import FuncAnimation
 
 from scipy.integrate import solve_ivp
 
@@ -21,6 +23,12 @@ from ODE import abm4
 from ODE import forward_euler
 from ODE import backwards_euler
 from ODE import eulers_method
+
+from PDE import FTCSE
+from PDE import BTCSI
+from PDE import CrankNicholson
+from PDE import CFD_5pt
+from PDE import solve_vibrating_string
 
 
 def data(f, l, r, h):
@@ -170,4 +178,215 @@ def plot_odesys_convergence(methods_list, f1, f2, interval, y1_0, y2_0, title):
     plt.ylabel('Max Error')
     plt.legend()
     plt.grid(True, which="both", ls="--")
+    plt.show()
+    
+def compute_pde_error(numerical_solution, exact_solution, x, t):
+    """
+    Computes the error between the numerical solution and the exact solution.
+
+    Parameters:
+    - numerical_solution: 2D numpy array
+        The numerical solution matrix.
+    - exact_solution: function
+        The exact solution function u(x, t).
+    - x: 1D numpy array
+        The spatial grid points.
+    - t: 1D numpy array
+        The time grid points.
+
+    Returns:
+    - error_matrix: 2D numpy array
+        The matrix of errors between the numerical and exact solutions.
+    """
+    exact_values = np.array([[exact_solution(xi, ti) for xi in x] for ti in t])
+    error_matrix = np.abs(numerical_solution - exact_values)
+    return error_matrix
+    
+def pde_convergence_analysis(solver, a, b, d, f, g, h, alpha, nx_values, dt_values, exact_solution):
+    errors = []
+    hs = []
+    for nx, dt in zip(nx_values, dt_values):
+        nt = int(d / dt)
+        if nt == 0:
+            raise ValueError(f"Number of time steps nt calculated as zero for dt = {dt}, which is too large.")
+        u, x, t = solver(a, b, d, f, g, h, nx, nt, alpha)
+        error = compute_pde_error(u, exact_solution, x, t)
+        errors.append(error)
+        hs.append((b - a) / nx)
+    return hs, errors
+
+def calculate_dt(dx, alpha):
+    return (0.5 * dx**2) / (1.01 *alpha)
+
+
+def plot_pde_convergence(solvers, solver_names, a, b, d, f, g, h, alpha, nx_values, exact_solution, title):
+    plt.figure(figsize=(12, 8))
+    for solver, name in zip(solvers, solver_names):
+        dt_values = [calculate_dt((b - a) / nx, alpha) for nx in nx_values]
+        hs, errors = pde_convergence_analysis(solver, a, b, d, f, g, h, alpha, nx_values, dt_values, exact_solution)
+        plt.loglog(hs, errors, label=f"{name}")
+    plt.title(f"Convergence Analysis for {title}")
+    plt.xlabel('Spatial Step Size (dx)')
+    plt.ylabel('Error')
+    plt.gca().invert_xaxis()
+    plt.legend()
+    plt.grid(True, which="both", ls='--')
+    plt.show()
+'''    
+def plot_pde_solution(solver, solver_name, a, b, d, f, g, h, alpha, nx):
+    dx = (b - a) / nx
+    dt = calculate_dt(dx, alpha)
+    nt = int(d / dt)
+
+    u, x, t = solver(a, b, d, f, g, h, nx, nt, alpha)
+    
+    # Plot the numerical solution
+    plt.figure(figsize=(12, 8))
+    plt.imshow(u, extent=[a, b, 0, d], aspect='auto', origin='lower', cmap='viridis')
+    plt.colorbar(label='Solution u(x,t)')
+    plt.title(f'Solution of PDE using {solver_name}')
+    plt.xlabel('Spatial coordinate x')
+    plt.ylabel('Time t')
+    plt.show()
+'''
+def plot_pde_solution(solver, solver_name, a, b, d, f, g, h, alpha, nx):
+    dx = (b - a) / nx
+    dt = calculate_dt(dx, alpha)
+    nt = int(d / dt)
+
+    u, x, t = solver(a, b, d, f, g, h, nx, nt, alpha)
+    
+    # Plot the numerical solution in 2D
+    plt.figure(figsize=(12, 8))
+    plt.imshow(u, extent=[a, b, 0, d], aspect='auto', origin='lower', cmap='viridis')
+    plt.colorbar(label='Solution u(x,t)')
+    plt.title(f'Solution of PDE using {solver_name}')
+    plt.xlabel('Spatial coordinate x')
+    plt.ylabel('Time t')
+    plt.show()
+    
+    # Prepare data for 3D plotting
+    X, T = np.meshgrid(x, t)
+    U = u
+    
+    # Plot the numerical solution in 3D
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, T, U, cmap='viridis')
+    fig.colorbar(surf, ax=ax, label='Solution u(x,t)')
+    
+    ax.set_title(f'Solution of PDE using {solver_name}')
+    ax.set_xlabel('Spatial coordinate x')
+    ax.set_ylabel('Time t')
+    ax.set_zlabel('Solution u(x,t)')
+    
+    plt.show()
+    
+def plot_pde_error(solver, solver_name, a, b, d, f, g, h, alpha, nx, exact_solution):
+    dx = (b - a) / nx
+    dt = calculate_dt(dx, alpha)
+    nt = int(d / dt)
+
+    u, x, t = solver(a, b, d, f, g, h, nx, nt, alpha)
+    error_matrix = compute_pde_error(u, exact_solution, x, t)
+    
+    # Plot the error in 2D
+    plt.figure(figsize=(12, 8))
+    plt.imshow(error_matrix, extent=[a, b, 0, d], aspect='auto', origin='lower', cmap='viridis')
+    plt.colorbar(label='Error |u(x,t) - exact|')
+    plt.title(f'Error of PDE Solution using {solver_name}')
+    plt.xlabel('Spatial coordinate x')
+    plt.ylabel('Time t')
+    plt.show()
+    
+    # Prepare data for 3D plotting
+    X, T = np.meshgrid(x, t)
+    E = error_matrix
+    
+    # Plot the error in 3D
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, T, E, cmap='viridis')
+    fig.colorbar(surf, ax=ax, label='Error |u(x,t) - exact|')
+    
+    ax.set_title(f'Error of PDE Solution using {solver_name}')
+    ax.set_xlabel('Spatial coordinate x')
+    ax.set_ylabel('Time t')
+    ax.set_zlabel('Error |u(x,t) - exact|')
+    
+    plt.show()
+    
+def plot_PDEBVP_solution(u, x, y, title):
+    X, Y = np.meshgrid(x, y)
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, Y, u.T, cmap='plasma')
+    fig.colorbar(surf, ax=ax, label='Solution u(x,y)')
+    ax.set_title(title)
+    ax.set_xlabel('Spatial coordinate x')
+    ax.set_ylabel('Spatial coordinate y')
+    ax.set_zlabel('Solution u(x,y)')
+    plt.show()
+
+def compute_PDEBVP_error(numerical_solution, exact_solution, x, y):
+    exact_values = np.array([[exact_solution(xi, yi) for yi in y] for xi in x])
+    error_matrix = np.abs(numerical_solution - exact_values)
+    return error_matrix
+
+def plot_PDEBVP_error(error_matrix, x, y, title):
+    X, Y = np.meshgrid(x, y)
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, Y, error_matrix.T, cmap='viridis')
+    fig.colorbar(surf, ax=ax, label='Error |u(x,y) - exact|')
+    ax.set_title(title)
+    ax.set_xlabel('Spatial coordinate x')
+    ax.set_ylabel('Spatial coordinate y')
+    ax.set_zlabel('Error |u(x,y) - exact|')
+    plt.show()
+    
+def plot_vibrating_string_solution(u, x, t, title):
+    fig = plt.figure(figsize=(12, 8))
+    for n in range(0, len(t), len(t)//10):
+        plt.plot(x, u[n, :], label=f't={t[n]:.2f}')
+    plt.title(title)
+    plt.xlabel('Spatial coordinate x')
+    plt.ylabel('Solution u(x,t)')
+    plt.legend()
+    plt.show()
+
+def compute_vibrating_string_error(numerical_solution, exact_solution, x, t):
+    exact_values = np.array([[exact_solution(xi, ti) for xi in x] for ti in t])
+    error_matrix = np.abs(numerical_solution - exact_values)
+    return error_matrix   
+
+def plot_vibrating_string_error(error_matrix, x, t, title):
+    X, T = np.meshgrid(x, t)
+    fig = plt.figure(figsize=(12, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    surf = ax.plot_surface(X, T, error_matrix, cmap='viridis')
+    fig.colorbar(surf, ax=ax, label='Error |u(x,t) - exact|')
+    ax.set_title(title)
+    ax.set_xlabel('Spatial coordinate x')
+    ax.set_ylabel('Time t')
+    ax.set_zlabel('Error |u(x,t) - exact|')
+    plt.show()   
+
+def animate_vibrating_string(u, x, t, title):
+    fig, ax = plt.subplots()
+    line, = ax.plot(x, u[0, :], color='k')
+    ax.set_xlim(0, np.max(x))
+    ax.set_ylim(np.min(u), np.max(u))
+    ax.set_xlabel('Spatial coordinate x')
+    ax.set_ylabel('Solution u(x,t)')
+    ax.set_title(title)
+
+    def update(frame):
+        # Debugging statement to check if the update function is called
+        print(f"Updating frame {frame}, time {t[frame]:.2f}")
+        line.set_ydata(u[frame, :])
+        ax.set_title(f'{title} at t={t[frame]:.2f}')
+        return line,
+
+    anim = FuncAnimation(fig, update, frames=len(t), interval=10, blit=False)
     plt.show()

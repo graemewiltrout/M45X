@@ -1,5 +1,5 @@
 """
-Numerical Methods Package: Matrices
+Numerical Methods Package: Matrix Operations
 @author: Graeme Wiltrout
 @advisor: T. Fogarty
 """

@@ -335,3 +335,44 @@ def solve_wave_2d(f, F, a, b, T, c2, dx, dy, dt):
                                    u[n, 1:-1, 2:] + u[n, 1:-1, :-2]))
 
     return u, x, y, t
+
+def solve_wave_2d_polar(f, F, r_max, theta_max, T, c2, dr, dtheta, dt):
+    # Discretize the space and time domains
+    r = np.arange(0, r_max + dr, dr)
+    theta = np.arange(0, theta_max + dtheta, dtheta)
+    t = np.arange(0, T + dt, dt)
+    nr, ntheta, nt = len(r), len(theta), len(t)
+
+    # Stability condition (CFL condition)
+    r_factor = 1 / dr**2 + 1 / (r[1:]**2 * dtheta**2)
+    assert np.all(c2 * dt**2 * r_factor <= 1), "Stability condition not met, reduce dt, increase dr or dtheta."
+
+    # Initialize solution matrices
+    u = np.zeros((nt, nr, ntheta))
+    
+    # Apply initial conditions
+    R, Theta = np.meshgrid(r, theta, indexing='ij')
+    u[0, :, :] = f(R, Theta)
+    u[1, 1:-1, :] = (f(R[1:-1, :], Theta[1:-1, :]) +
+                     dt * F(R[1:-1, :], Theta[1:-1, :]) +
+                     0.5 * c2 * dt**2 * (
+                         (f(R[2:, :], Theta[2:, :]) - 2 * f(R[1:-1, :], Theta[1:-1, :]) + f(R[:-2, :], Theta[:-2, :])) / dr**2 +
+                         (1 / R[1:-1, :] * (f(R[2:, :], Theta[2:, :]) - f(R[:-2, :], Theta[:-2, :]))) / (2 * dr) +
+                         (1 / R[1:-1, :]**2 * (f(R[1:-1, 2:], Theta[1:-1, 2:]) - 2 * f(R[1:-1, 1:-1], Theta[1:-1, 1:-1]) + f(R[1:-1, :-2], Theta[1:-1, :-2]))) / dtheta**2))
+
+    # Apply boundary condition u(r = r_max, t) = 0
+    u[:, -1, :] = 0
+
+    # Time-stepping loop
+    for n in range(1, nt-1):
+        u[n+1, 1:-1, 1:-1] = (2 * (1 - c2 * dt**2 * (1 / dr**2 + 1 / (R[1:-1, 1:-1]**2 * dtheta**2))) * u[n, 1:-1, 1:-1] -
+                              u[n-1, 1:-1, 1:-1] +
+                              c2 * dt**2 * (
+                                  (u[n, 2:, 1:-1] - 2 * u[n, 1:-1, 1:-1] + u[n, :-2, 1:-1]) / dr**2 +
+                                  (1 / R[1:-1, 1:-1] * (u[n, 2:, 1:-1] - u[n, :-2, 1:-1])) / (2 * dr) +
+                                  (1 / R[1:-1, 1:-1]**2 * (u[n, 1:-1, 2:] - 2 * u[n, 1:-1, 1:-1] + u[n, 1:-1, :-2])) / dtheta**2))
+
+        # Apply boundary condition at each time step
+        u[n+1, -1, :] = 0
+
+    return u, r, theta, t

@@ -204,13 +204,21 @@ def power_method(A, num_iter=1000, tol=1e-10):
 def power_method(A, num_iter=1000, tol=1e-10):
     n = len(A)
     b_k = [1] * n
-    
+    b_k = [x / norm(b_k) for x in b_k]  # Normalize the initial vector
+
     for _ in range(num_iter):
+        # Compute the matrix-by-vector product A*b_k
         b_k1 = [sum(A[i][j] * b_k[j] for j in range(n)) for i in range(n)]
+        
+        # Compute the norm of b_k1
         b_k1_norm = norm(b_k1)
+        
+        # Normalize the vector b_k1
         b_k = [x / b_k1_norm for x in b_k1]
         
-        if norm([sum(A[i][j] * b_k[j] for j in range(n)) - b_k1_norm * b_k[i] for i in range(n)]) < tol:
+        # Check for convergence
+        residual = norm([sum(A[i][j] * b_k[j] for j in range(n)) - b_k1_norm * b_k[i] for i in range(n)])
+        if residual < tol:
             break
     
     eigenvalue = b_k1_norm

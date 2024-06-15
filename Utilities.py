@@ -7,6 +7,7 @@ Numerical Methods Package: Utilities
 import numpy as np
 import matplotlib.pyplot as plt
 import concurrent.futures
+import imageio
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib.animation import FuncAnimation
 
@@ -372,7 +373,7 @@ def plot_vibrating_string_error(error_matrix, x, t, title):
     ax.set_zlabel('Error |u(x,t) - exact|')
     plt.show()   
 
-def animate_vibrating_string(u, x, t, title):
+def animate_vibrating_string(u, x, t, title, save_path=None):
     fig, ax = plt.subplots()
     line, = ax.plot(x, u[0, :], color='k')
     ax.set_xlim(0, np.max(x))
@@ -389,4 +390,7 @@ def animate_vibrating_string(u, x, t, title):
         return line,
 
     anim = FuncAnimation(fig, update, frames=len(t), interval=10, blit=False)
+    
+    if save_path:
+        anim.save(save_path, writer='ffmpeg', fps=30)
     plt.show()
